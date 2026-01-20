@@ -1,0 +1,80 @@
+﻿@model List<MYTaskManager.Models.Task>
+@{
+    ViewData["Title"] = "Today's Tasks";
+}
+
+<div class="container">
+    <h1 class="text-center mb-4">📅 Today's Tasks</h1>
+
+    @if (Model.Any())
+    {
+        <div class="row">
+            @foreach (var task in Model)
+            {
+                <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">@task.Title</h5>
+                            <p class="card-text">@task.Description</p>
+                            <div class="mb-2">
+                                <span class="badge @GetPriorityBadgeClass(task.Priority?.PriorityName)">
+                                    @task.Priority?.PriorityName
+                                </span>
+                                <span class="badge @GetStatusBadgeClass(task.Status?.StatusName)">
+                                    @task.Status?.StatusName
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">
+                                    Project: @task.Project?.ProjectName
+                                </small>
+                                <small class="text-muted">
+                                    Assigned to: @task.AssignedToNavigation?.FullName
+                                </small>
+                            </div>
+                            <div class="mt-2">
+                                <a href="/Tasks/Details/@task.TaskId" class="btn btn-primary btn-sm">View Details</a>
+                                <a href="/Tasks/Edit/@task.TaskId" class="btn btn-warning btn-sm">Edit</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-info text-center">
+            <h4>No tasks due today! 🎉</h4>
+            <p>You're all caught up with today's tasks.</p>
+            <a href="/Tasks/Create" class="btn btn-primary">Create New Task</a>
+        </div>
+    }
+</div>
+
+@functions {
+    private string GetPriorityBadgeClass(string priority)
+    {
+        return priority?.ToLower() switch
+        {
+            "urgent" => "bg-danger",
+            "high" => "bg-warning",
+            "medium" => "bg-info",
+            "low" => "bg-secondary",
+            _ => "bg-secondary"
+        };
+    }
+
+    private string GetStatusBadgeClass(string status)
+    {
+        return status?.ToLower() switch
+        {
+            "completed" => "bg-success",
+            "in progress" => "bg-primary",
+            "pending" => "bg-warning",
+            "on hold" => "bg-secondary",
+            "cancelled" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}

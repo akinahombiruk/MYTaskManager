@@ -1,0 +1,492 @@
+﻿@model MYTaskManager.Models.ViewModel.DashBoardViewModel
+@{
+    ViewData["Title"] = "Task Manager Dashboard";
+    
+    string GetPriorityBadgeClass(string priority)
+    {
+        if (priority == "Urgent") return "bg-brown-dark";
+        if (priority == "High") return "bg-brown-medium";
+        if (priority == "Medium") return "bg-beige-dark";
+        if (priority == "Low") return "bg-beige-light";
+        return "bg-beige-light";
+    }
+
+    string GetStatusBadgeClass(string status)
+    {
+        if (status == "Completed") return "bg-success-cozy";
+        if (status == "In Progress") return "bg-brown-light";
+        if (status == "Pending") return "bg-warning-cozy";
+        if (status == "On Hold") return "bg-beige-medium";
+        if (status == "Cancelled") return "bg-danger-cozy";
+        return "bg-beige-light";
+    }
+
+    string GetDueDateBadgeClass(DateOnly? dueDate)
+    {
+        if (!dueDate.HasValue) return "bg-beige-light";
+        
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var daysUntilDue = dueDate.Value.DayNumber - today.DayNumber;
+        
+        if (daysUntilDue < 0) return "bg-danger-cozy";
+        if (daysUntilDue == 0) return "bg-warning-cozy";
+        if (daysUntilDue == 1) return "bg-brown-light";
+        return "bg-beige-medium";
+    }
+
+    string GetDueDateText(DateOnly? dueDate)
+    {
+        if (!dueDate.HasValue) return "No due date";
+        
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        var daysUntilDue = dueDate.Value.DayNumber - today.DayNumber;
+        
+        if (daysUntilDue < 0) return "Overdue";
+        if (daysUntilDue == 0) return "Due Today";
+        if (daysUntilDue == 1) return "Due Tomorrow";
+        return $"Due in {daysUntilDue} days";
+    }
+}
+
+<div class="text-center cozy-header">
+    <h1 class="display-4 cozy-title">Welcome to Your Task Manager</h1>
+    <p class="lead cozy-subtitle">Stay organized in your cozy workspace</p>
+</div>
+
+<!-- Dashboard Stats -->
+<div class="row mt-5">
+    <div class="col-md-2">
+        <div class="card text-white bg-brown-dark cozy-card">
+            <div class="card-body text-center">
+                <i class="fas fa-tasks cozy-icon mb-2"></i>
+                <h5>Total Tasks</h5>
+                <h2 class="cozy-number">@Model.TotalTasks</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-white bg-brown-medium cozy-card">
+            <div class="card-body text-center">
+                <i class="fas fa-clock cozy-icon mb-2"></i>
+                <h5>Pending</h5>
+                <h2 class="cozy-number">@Model.PendingTasks</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-white bg-success-cozy cozy-card">
+            <div class="card-body text-center">
+                <i class="fas fa-check-circle cozy-icon mb-2"></i>
+                <h5>Completed</h5>
+                <h2 class="cozy-number">@Model.CompletedTasks</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-white bg-danger-cozy cozy-card">
+            <div class="card-body text-center">
+                <i class="fas fa-exclamation-circle cozy-icon mb-2"></i>
+                <h5>Overdue</h5>
+                <h2 class="cozy-number">@Model.OverdueTasks</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-white bg-beige-dark cozy-card">
+            <div class="card-body text-center">
+                <i class="fas fa-folder cozy-icon mb-2"></i>
+                <h5>Projects</h5>
+                <h2 class="cozy-number">@Model.TotalProjects</h2>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-white bg-beige-medium cozy-card">
+            <div class="card-body text-center">
+                <i class="fas fa-play-circle cozy-icon mb-2"></i>
+                <h5>Active</h5>
+                <h2 class="cozy-number">@Model.ActiveProjects</h2>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card cozy-card cozy-border">
+            <div class="card-body text-center cozy-actions">
+                <h4 class="cozy-section-title">Quick Actions</h4>
+                <a href="/Tasks/Create" class="btn cozy-btn-primary m-2">📝 Add New Task</a>
+                <a href="/Tasks" class="btn cozy-btn-secondary m-2">📋 View All Tasks</a>
+                <a href="/Projects" class="btn cozy-btn-accent m-2">📁 View Projects</a>
+                <a href="/Home/TodayTasks" class="btn cozy-btn-warning m-2">📅 Today's Tasks</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Upcoming Tasks & Recent Activity -->
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card cozy-card cozy-border">
+            <div class="card-body">
+                <h5 class="cozy-section-title">📅 Upcoming Tasks (Next 7 Days)</h5>
+                @if (Model.UpcomingTasks.Any())
+                {
+                    <ul class="list-group cozy-list">
+                        @foreach (var task in Model.UpcomingTasks)
+                        {
+                            <li class="list-group-item cozy-list-item">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1 cozy-task-title">@task.Title</h6>
+                                        <small class="text-muted cozy-task-meta">
+                                            📂 @task.ProjectName | 👤 @task.AssignedToName
+                                        </small>
+                                        <br>
+                                        <small class="cozy-task-badges">
+                                            <span class="badge @GetPriorityBadgeClass(task.PriorityName)">@task.PriorityName</span>
+                                            <span class="badge @GetStatusBadgeClass(task.StatusName)">@task.StatusName</span>
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge @GetDueDateBadgeClass(task.DueDate) cozy-due-badge">
+                                            @GetDueDateText(task.DueDate)
+                                        </span>
+                                    </div>
+                                </div>
+                            </li>
+                        }
+                    </ul>
+                }
+                else
+                {
+                    <div class="text-center cozy-empty-state">
+                        <i class="fas fa-check-circle fa-2x mb-3"></i>
+                        <p class="text-muted">No upcoming tasks in the next 7 days</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card cozy-card cozy-border">
+            <div class="card-body">
+                <h5 class="cozy-section-title">📊 Recent Activity</h5>
+                @if (Model.RecentActivities.Any())
+                {
+                    <div class="cozy-timeline">
+                        @foreach (var activity in Model.RecentActivities)
+                        {
+                            <div class="cozy-activity-item">
+                                <div class="cozy-activity-dot"></div>
+                                <div class="cozy-activity-content">
+                                    <div class="d-flex justify-content-between">
+                                        <small class="cozy-activity-time">@activity.Timestamp.ToString("MMM dd, yyyy hh:mm tt")</small>
+                                        <span class="badge @GetStatusBadgeClass(activity.StatusName)">@activity.StatusName</span>
+                                    </div>
+                                    <p class="mb-1 cozy-activity-text">
+                                        @if (activity.ActivityType == "Created")
+                                        {
+                                            <text>📝 <strong class="cozy-user">@activity.UserName</strong> created "</text>
+                                        }
+                                        else
+                                        {
+                                            <text>✏️ <strong class="cozy-user">@activity.UserName</strong> updated "</text>
+                                        }
+                                        <a href="/Tasks/Details/@activity.TaskId" class="cozy-task-link">@activity.Title</a>"
+                                    </p>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center cozy-empty-state">
+                        <i class="fas fa-history fa-2x mb-3"></i>
+                        <p class="text-muted">No recent activity</p>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Cozy Color Palette */
+    :root {
+        --brown-dark: #2F1B0A;
+        --brown-medium: #4A3520;
+        --brown-light: #5D432C;
+        --beige-dark: #CD853F;
+        --beige-medium: #D2B48C;
+        --beige-light: #FFE4C4;
+        --beige-very-light: #FEFBF3;
+        --success-cozy: #6F4E37;
+        --warning-cozy: #7C4D2F;
+        --danger-cozy: #8B4513;
+    }
+
+    /* Base Styles */
+    body {
+        background-color: var(--beige-very-light);
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Header Styles */
+    .cozy-header {
+        background: linear-gradient(135deg, var(--brown-dark), var(--brown-light));
+        color: white;
+        padding: 3rem 1rem;
+        border-radius: 15px;
+        margin-bottom: 2rem;
+        box-shadow: 0 8px 25px rgba(139, 69, 19, 0.2);
+    }
+
+    .cozy-title {
+        font-weight: 300;
+        margin-bottom: 0.5rem;
+        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .cozy-subtitle {
+        font-weight: 300;
+        opacity: 0.9;
+        font-size: 1.2rem;
+    }
+
+    /* Card Styles */
+    .cozy-card {
+        border: none;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(139, 69, 19, 0.1);
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    .cozy-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(139, 69, 19, 0.2);
+    }
+
+    .cozy-border {
+        border: 1px solid var(--beige-medium);
+    }
+
+    /* Stats Cards */
+    .cozy-icon {
+        font-size: 1.5rem;
+        opacity: 0.9;
+    }
+
+    .cozy-number {
+        font-weight: 300;
+        font-size: 2.5rem;
+        margin: 0.5rem 0 0 0;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    }
+
+    /* Color Classes */
+    .bg-brown-dark { background: linear-gradient(100deg, var(--brown-dark), var(--brown-medium)) !important; }
+    .bg-brown-medium { background: linear-gradient(100deg, var(--brown-medium), var(--brown-light)) !important; }
+    .bg-brown-light { background: linear-gradient(100deg, var(--brown-light), var(--beige-dark)) !important; }
+    .bg-beige-dark { background: linear-gradient(100deg, var(--beige-dark), var(--beige-medium)) !important; }
+    .bg-beige-medium { background: linear-gradient(100deg, var(--beige-medium), var(--beige-light)) !important; }
+    .bg-beige-light { background: var(--beige-light) !important; color: #333 !important; }
+    .bg-success-cozy { background: linear-gradient(100deg, var(--success-cozy), #FFE4C4) !important; }
+
+    .bg-warning-cozy {
+        background: linear-gradient(135deg, var(--warning-cozy), #CD853F) !important;
+    }
+
+    .bg-danger-cozy {
+        background: linear-gradient(135deg, var(--danger-cozy), #D2B48C) !important;
+    }
+
+    /* Button Styles */
+    .cozy-btn-primary {
+        background: linear-gradient(135deg, var(--brown-medium), var(--brown-light));
+        border: none;
+        border-radius: 25px;
+        padding: 10px 25px;
+        color: white;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(139, 69, 19, 0.2);
+    }
+
+    .cozy-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(139, 69, 19, 0.3);
+        background: linear-gradient(135deg, var(--brown-dark), var(--brown-medium));
+        color: white;
+    }
+
+    .cozy-btn-secondary {
+        background: var(--beige-light);
+        border: 2px solid var(--beige-dark);
+        border-radius: 25px;
+        padding: 10px 25px;
+        color: var(--brown-dark);
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .cozy-btn-secondary:hover {
+        background: var(--beige-medium);
+        border-color: var(--brown-light);
+        color: var(--brown-dark);
+        transform: translateY(-2px);
+    }
+
+    .cozy-btn-accent {
+        background: linear-gradient(135deg, var(--beige-dark), var(--beige-medium));
+        border: none;
+        border-radius: 25px;
+        padding: 10px 25px;
+        color: var(--brown-dark);
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .cozy-btn-warning {
+        background: linear-gradient(135deg, var(--warning-cozy), #E6C200);
+        border: none;
+        border-radius: 25px;
+        padding: 10px 25px;
+        color: white;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    /* List Styles */
+    .cozy-list {
+        border: none;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .cozy-list-item {
+        background: var(--beige-very-light);
+        border: 1px solid var(--beige-medium);
+        margin-bottom: 8px;
+        border-radius: 10px !important;
+        padding: 15px;
+        transition: all 0.3s ease;
+    }
+
+    .cozy-list-item:hover {
+        background: var(--beige-light);
+        transform: translateX(5px);
+    }
+
+    .cozy-task-title {
+        color: var(--brown-dark);
+        font-weight: 600;
+        margin-bottom: 5px;
+    }
+
+    .cozy-task-meta {
+        color: var(--brown-medium);
+        font-size: 0.85rem;
+    }
+
+    .cozy-task-badges .badge {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 12px;
+        margin-right: 5px;
+    }
+
+    .cozy-due-badge {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+        border-radius: 15px;
+        font-weight: 500;
+    }
+
+    /* Timeline Styles */
+    .cozy-timeline {
+        position: relative;
+        padding-left: 20px;
+    }
+
+    .cozy-activity-item {
+        position: relative;
+        margin-bottom: 20px;
+        padding-left: 20px;
+    }
+
+    .cozy-activity-dot {
+        position: absolute;
+        left: -10px;
+        top: 8px;
+        width: 12px;
+        height: 12px;
+        background: var(--brown-light);
+        border-radius: 50%;
+        border: 3px solid var(--beige-very-light);
+        box-shadow: 0 0 0 2px var(--brown-light);
+    }
+
+    .cozy-activity-content {
+        background: var(--beige-very-light);
+        padding: 15px;
+        border-radius: 10px;
+        border-left: 3px solid var(--brown-light);
+    }
+
+    .cozy-activity-time {
+        color: var(--brown-medium);
+        font-size: 0.8rem;
+    }
+
+    .cozy-activity-text {
+        color: var(--brown-dark);
+        margin-top: 5px;
+    }
+
+    .cozy-user {
+        color: var(--brown-dark);
+    }
+
+    .cozy-task-link {
+        color: var(--brown-medium);
+        text-decoration: none;
+        font-weight: 500;
+    }
+
+    .cozy-task-link:hover {
+        color: var(--brown-dark);
+        text-decoration: underline;
+    }
+
+    /* Section Titles */
+    .cozy-section-title {
+        color: var(--brown-dark);
+        font-weight: 600;
+        margin-bottom: 1rem;
+        border-bottom: 2px solid var(--beige-medium);
+        padding-bottom: 0.5rem;
+    }
+
+    /* Empty States */
+    .cozy-empty-state {
+        padding: 3rem 1rem;
+        color: var(--brown-medium);
+    }
+
+    .cozy-empty-state i {
+        color: var(--beige-dark);
+    }
+
+    /* Quick Actions Section */
+    .cozy-actions {
+        background: linear-gradient(135deg, var(--beige-very-light), var(--beige-light));
+    }
+</style>
+
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
