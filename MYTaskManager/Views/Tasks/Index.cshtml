@@ -1,89 +1,141 @@
 ﻿@model IEnumerable<MYTaskManager.Models.Task>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Tasks";
 }
 
-<h1>Index</h1>
+<style>
+    body {
+        background-color: #f8f5f2;
+    }
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.Title)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Description)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.DueDate)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.UpdatedAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.AssignedToNavigation)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CreatedByNavigation)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Priority)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Project)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Status)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Title)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Description)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.DueDate)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedAt)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.UpdatedAt)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AssignedToNavigation.UserId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CreatedByNavigation.UserId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Priority.PriorityId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Project.ProjectId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Status.StatusId)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.TaskId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.TaskId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.TaskId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+    .task-card {
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 8px 20px rgba(101, 67, 33, 0.15);
+        border-top: 6px solid #8b5e3c;
+    }
+
+    .task-title {
+        color: #6f4e37;
+        font-weight: 700;
+    }
+
+    .btn-brown {
+        background-color: #8b5e3c;
+        color: white;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+        .btn-brown:hover {
+            background-color: #6f4e37;
+            color: white;
+        }
+
+    .table thead {
+        background-color: #ede3d7;
+        color: #5a3e2b;
+    }
+
+    .table th {
+        font-weight: 600;
+        border-bottom: 2px solid #d3c2b2;
+    }
+
+    .table tbody tr:hover {
+        background-color: #f3ebe4;
+    }
+
+    .action-btn {
+        padding: 4px 10px;
+        font-size: 0.85rem;
+        border-radius: 6px;
+        text-decoration: none;
+        margin-right: 4px;
+        font-weight: 500;
+    }
+
+    .btn-edit {
+        background-color: #c49a6c;
+        color: white;
+    }
+
+    .btn-details {
+        background-color: #a67c52;
+        color: white;
+    }
+
+    .btn-delete {
+        background-color: #8b5e3c;
+        color: white;
+    }
+
+        .btn-edit:hover,
+        .btn-details:hover,
+        .btn-delete:hover {
+            opacity: 0.85;
+            color: white;
+        }
+</style>
+
+<div class="container mt-5">
+    <div class="task-card">
+
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="task-title">Task List</h2>
+            <a asp-action="Create" class="btn-brown">+ Create Task</a>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Description</th>
+                        <th>Due Date</th>
+                        <th>Created</th>
+                        <th>Updated</th>
+                        <th>Assigned To</th>
+                        <th>Created By</th>
+                        <th>Priority</th>
+                        <th>Project</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Title</td>
+                            <td class="text-truncate" style="max-width: 200px;">
+                                @item.Description
+                            </td>
+                            <td>@item.DueDate?.ToString("yyyy-MM-dd")</td>
+                            <td>@item.CreatedAt?.ToString("yyyy-MM-dd")</td>
+                            <td>@item.UpdatedAt?.ToString("yyyy-MM-dd")</td>
+                            <td>@item.AssignedToNavigation?.UserId</td>
+                            <td>@item.CreatedByNavigation?.UserId</td>
+                            <td>@item.Priority?.PriorityId</td>
+                            <td>@item.Project?.ProjectId</td>
+                            <td>@item.Status?.StatusId</td>
+                            <td class="text-center">
+                                <div class="action-group">
+                                    <a asp-action="Edit" asp-route-id="@item.TaskId" class="action-btn btn-edit">Edit</a>
+                                    <a asp-action="Details" asp-route-id="@item.TaskId" class="action-btn btn-details">Details</a>
+                                    <a asp-action="Delete" asp-route-id="@item.TaskId" class="action-btn btn-delete">Delete</a>
+                                </div>
+                            </td>
+
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
